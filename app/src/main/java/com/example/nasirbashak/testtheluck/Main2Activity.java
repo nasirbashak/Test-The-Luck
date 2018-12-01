@@ -4,28 +4,33 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.RadioButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public class Main2Activity extends AppCompatActivity {
     static int num1, num2, time = 200;
     static final String QM = "?";
     TextView t1, t2, mainText, timeView;
-    Switch includeOrNot;
+    Button btnCheck;
+
+    boolean exclude2;
 
     static Random rand = new Random();
 
 
     static int[] visited;
-    static int[] excluded;
-    static int min, max, i;
+    static int i;
     static int range;
-    boolean exclude = false;
+
+    static ArrayList<Integer> generatedNumbers;
+    static int count;
 
 
     @Override
@@ -37,107 +42,88 @@ public class Main2Activity extends AppCompatActivity {
         t2 = (TextView) findViewById(R.id.text2);
         mainText = (TextView) findViewById(R.id.mainText);
         timeView = (TextView) findViewById(R.id.timeView);
-        includeOrNot = (Switch) findViewById(R.id.btnSwitch);
+        btnCheck = (Button) findViewById(R.id.btnchk);
+
 
         Bundle bundle = getIntent().getExtras();
         String s1 = bundle.getString("num1");
         String s2 = bundle.getString("num2");
+        exclude2 = bundle.getBoolean("choice");
+        Toast.makeText(getApplicationContext(), "" + exclude2, Toast.LENGTH_SHORT).show();
         //Toast.makeText(getApplicationContext(),s1+" 1st "+s2,Toast.LENGTH_LONG).show();
         t1.setText(s1);
         t2.setText(s2);
+
 
         num1 = Integer.parseInt(s1);
         num2 = Integer.parseInt(s2);
         mainText.setText(QM);
         range = num2 - num1 + 1;
-        visited = new int[range];
 
-        //includeOrNot.setEnabled(false);
-
-        includeOrNot.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked){
-                    exclude= true;
-                }else{
-                    exclude= false;
-                }
-            }
-        });
+        count = 0;
+        generatedNumbers = new ArrayList<>(range);
 
 
     }
 
-
-    public int test() {
-
-        int num = generate();
-        //System.out.println("Rand num is" + num);
-
-        //System.out.println("Do u want to exclude??");
-        //exclude = scan.nextBoolean();
-        exclude = includeOrNot.isChecked();
-
-        Toast.makeText(getApplicationContext(), "" + exclude, Toast.LENGTH_SHORT).show();
-
-        if (exclude)
-            includeOrNotMethod(num);
-
-        return num;
-    }
-
-    private static void includeOrNotMethod(int num) {
-
-        for (int j = 0; j < range; j++) {
-            if (num == visited[j])
-                return;
-        }
-        visited[i++] = num;
-
-    }
-
-    public static int generate() {
-
+    private int generateTheNumber() {
         int num = Math.abs(rand.nextInt(num2) + num1);
 
-        if (isVisited(num)) {
-            return generate();
+        if (found(num)) {
+            return generateTheNumber();
         }
 
         return num;
+
     }
 
+    private boolean found(int num) {
 
-    private static boolean isVisited(int num) {
-
-        for (int j = 0; j < range; j++) {
-            if (num == visited[j])
+        for (Integer n : generatedNumbers) {
+            if (num == n)
                 return true;
+
         }
+
+        generatedNumbers.add(num);
         return false;
     }
 
+    int n;
 
     public void generateTheNum(View view) {
 
-        if (i < range) {
+
+        if (exclude2) {
+            if (count < range) {
+                n = generateTheNumber();
+                count++;
+
+                mainText.setText(n + "");
 
 
-            includeOrNot.setEnabled(true);
+                time = 115;
+                setTimer();
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainText.setText(QM);
+                        btnCheck.setEnabled(true);
+                    }
+                }, 2000);
+                btnCheck.setEnabled(false);
 
-            int num = generate();
 
-            Toast.makeText(getApplicationContext(), "" + exclude, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getApplicationContext(), "Max Reached", Toast.LENGTH_LONG).show();
 
-            if (exclude)
-                includeOrNotMethod(num);
+            }
 
+        } else {
+            n = Math.abs(rand.nextInt(num2) + num1);
 
-            //Random rand = new Random();
-            //int num = Math.abs(rand.nextInt(num2) + num1);
-
-            //int num = test();
-            mainText.setText(num + "");
+            mainText.setText(n + "");
 
 
             time = 115;
@@ -147,12 +133,13 @@ public class Main2Activity extends AppCompatActivity {
                 @Override
                 public void run() {
                     mainText.setText(QM);
-                    includeOrNot.setEnabled(false);
+                    btnCheck.setEnabled(true);
                 }
             }, 2000);
-        } else {
-            Toast.makeText(getApplicationContext(), "Max Reached", Toast.LENGTH_LONG).show();
+            btnCheck.setEnabled(false);
+
         }
+
 
     }
 
